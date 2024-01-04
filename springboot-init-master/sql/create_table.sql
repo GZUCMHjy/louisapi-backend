@@ -27,7 +27,7 @@ create table if not exists user
 ) comment '用户' collate = utf8mb4_unicode_ci;
 
 -- 帖子表
-create table if not exists interfaceInfo
+create table if not exists user_interface_info
 (
     id         bigint auto_increment comment 'id' primary key,
     title      varchar(512)                       null comment '标题',

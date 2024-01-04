@@ -139,14 +139,11 @@ public class InterfaceInfoController {
         long pageSize = interfaceInfoQueryRequest.getPageSize();
         String sortField = interfaceInfoQueryRequest.getSortField();
         String sortOrder = interfaceInfoQueryRequest.getSortOrder();
-        String desciption = interfaceInfoQueryRequest.getDesciption();
-        interfaceInfoQuery.setDesciption(desciption);
         if(pageSize > 50){
             // 限制爬虫
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.like(StringUtils.isNotBlank(desciption),"description",desciption);
         queryWrapper.orderBy(StringUtils.isNotBlank(sortField),sortOrder.equals(CommonConstant.SORT_ORDER_ASC),sortField);
         Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(new Page<>(current, pageSize), queryWrapper);
         return ResultUtils.success(interfaceInfoPage);

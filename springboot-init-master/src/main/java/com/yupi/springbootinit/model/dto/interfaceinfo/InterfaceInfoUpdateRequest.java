@@ -16,7 +16,6 @@ import java.util.Date;
  */
 @Data
 public class InterfaceInfoUpdateRequest implements Serializable {
-
     /**
      * 接口id
      */
