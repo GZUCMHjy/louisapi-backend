@@ -7,12 +7,12 @@ import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.yuapi.common.model.entity.User;
 import com.yupi.springbootinit.common.ErrorCode;
 import com.yupi.springbootinit.constant.CommonConstant;
 import com.yupi.springbootinit.exception.BusinessException;
 import com.yupi.springbootinit.mapper.UserMapper;
 import com.yupi.springbootinit.model.dto.user.UserQueryRequest;
-import com.yupi.springbootinit.model.entity.User;
 import com.yupi.springbootinit.model.enums.UserRoleEnum;
 import com.yupi.springbootinit.model.vo.LoginUserVO;
 import com.yupi.springbootinit.model.vo.UserVO;
@@ -32,8 +32,8 @@ import org.springframework.util.DigestUtils;
 /**
  * 用户服务实现
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ * @author louis
+ * 
  */
 @Service
 @Slf4j

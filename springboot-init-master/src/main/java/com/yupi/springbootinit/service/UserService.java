@@ -2,8 +2,8 @@ package com.yupi.springbootinit.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.yuapi.common.model.entity.User;
 import com.yupi.springbootinit.model.dto.user.UserQueryRequest;
-import com.yupi.springbootinit.model.entity.User;
 import com.yupi.springbootinit.model.vo.LoginUserVO;
 import com.yupi.springbootinit.model.vo.UserVO;
 import java.util.List;
@@ -13,8 +13,8 @@ import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 /**
  * 用户服务
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ * @author louis
+ * 
  */
 public interface UserService extends IService<User> {
 

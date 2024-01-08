@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 import com.louis.louisapiclientsdk.client.LouisApiClient;
+import com.yuapi.common.model.entity.InterfaceInfo;
+import com.yuapi.common.model.entity.User;
 import com.yupi.springbootinit.annotation.AuthCheck;
 import com.yupi.springbootinit.common.*;
 import com.yupi.springbootinit.constant.CommonConstant;
@@ -13,8 +15,6 @@ import com.yupi.springbootinit.exception.ThrowUtils;
 import com.yupi.springbootinit.model.dto.interfaceinfo.InterfaceInfoAddRequest;
 import com.yupi.springbootinit.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 import com.yupi.springbootinit.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
-import com.yupi.springbootinit.model.entity.InterfaceInfo;
-import com.yupi.springbootinit.model.entity.User;
 import com.yupi.springbootinit.model.enums.InterfaceInfoStatusEnum;
 import com.yupi.springbootinit.service.InterfaceInfoService;
 import com.yupi.springbootinit.service.UserService;
@@ -30,8 +30,8 @@ import java.util.List;
 /**
  * 帖子接口
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ * @author louis
+ * 
  */
 @RestController
 @RequestMapping("/interfaceInfo")
@@ -129,7 +129,7 @@ public class InterfaceInfoController {
         return ResultUtils.success(result);
     }
     @GetMapping("list/page")
-    public BaseResponse<Page<InterfaceInfo>> listInterfaceInfoByPage(InterfaceInfoQueryRequest interfaceInfoQueryRequest,HttpServletRequest request){
+    public BaseResponse<Page<InterfaceInfo>> listInterfaceInfoByPage(InterfaceInfoQueryRequest interfaceInfoQueryRequest, HttpServletRequest request){
         if(interfaceInfoQueryRequest == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -167,6 +167,11 @@ public class InterfaceInfoController {
     }
 
 
+    /**
+     * 发布接口
+     * @param idRequest
+     * @return
+     */
     @AuthCheck(mustRole = "admin")
     @PostMapping("/online")
     public BaseResponse<Boolean> onlineInterfaceInfo(@RequestBody IdRequest idRequest){
@@ -190,6 +195,12 @@ public class InterfaceInfoController {
         boolean b = interfaceInfoService.updateById(interfaceInfo);
         return ResultUtils.success(b);
     }
+
+    /**
+     * 下线接口
+     * @param idRequest
+     * @return
+     */
     @AuthCheck(mustRole = "admin")
     @PostMapping("/offline")
     public BaseResponse<Boolean> offlineInterfaceInfo(@RequestBody IdRequest idRequest){
@@ -231,6 +242,7 @@ public class InterfaceInfoController {
         }
         User loginUser = userService.getLoginUser(request);
         String accessKey = loginUser.getAccessKey();
+        // 起初sk是空的（后端内部自己流通生成的）
         String secretKey = loginUser.getSecretKey();
         // 用户自己的ak 和 sk
         LouisApiClient tempClient = new LouisApiClient(accessKey,secretKey);
@@ -239,6 +251,9 @@ public class InterfaceInfoController {
         // 将前端传来的json格式的字符串转化为Java对象
         // 保证前端传来name和后端中对象的属性name要保持一致 否则解析赋值就会null
         com.louis.louisapiclientsdk.model.User user = gson.fromJson(userRequestParams, com.louis.louisapiclientsdk.model.User.class);
+        // todo 写死了（第三方接口）
+        // 调用自己封装的sdk（专门存放接口的sdk）
+        // 执行这一个调用sdk方法 跳转到网关（做两个项目interfaceInfo和backend的统一校验和业务逻辑处理）
         String usernameByPost = tempClient.getUsernameByPost(user);
         return ResultUtils.success(usernameByPost);
     }

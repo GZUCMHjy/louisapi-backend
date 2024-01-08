@@ -1,8 +1,7 @@
 package com.yupi.springbootinit.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.yupi.springbootinit.model.entity.InterfaceInfo;
-import com.yupi.springbootinit.model.entity.Post;
+import com.yuapi.common.model.entity.InterfaceInfo;
 
 import javax.servlet.http.HttpServletRequest;
 

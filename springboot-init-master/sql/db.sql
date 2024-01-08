@@ -36,4 +36,5 @@ insert into yuapi.`interface_info` (`username`, `name`, `requestHeader`, `respon
 insert into yuapi.`interface_info` (`username`, `name`, `requestHeader`, `responseHeader`, `desciption`, `method`, `userId`, `url`) values ('尹嘉懿', '蒋彬', '谭彬', '彭凯瑞', '龚子涵', '任黎昕', 84315, 'www.joya-paucek.info');
 insert into yuapi.`interface_info` (`username`, `name`, `requestHeader`, `responseHeader`, `desciption`, `method`, `userId`, `url`) values ('刘振家', '崔立诚', '曾子轩', '金烨磊', '何晟睿', '崔子轩', 578, 'www.rosario-walker.net');
 insert into yuapi.`interface_info` (`username`, `name`, `requestHeader`, `responseHeader`, `desciption`, `method`, `userId`, `url`) values ('徐展鹏', '邱明哲', '白皓轩', '郭楷瑞', '顾聪健', '方明', 27, 'www.noemi-dare.net');
+
 insert into yuapi.`interface_info` (`username`, `name`, `requestHeader`, `responseHeader`, `desciption`, `method`, `userId`, `url`) values ('孔鹏', '白风华', '吕笑愚', '蔡鹏涛', '汪荣轩', '徐梓晨', 3304, 'www.janet-klocko.biz');
