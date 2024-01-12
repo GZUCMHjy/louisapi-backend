@@ -1,7 +1,10 @@
 package com.yupi.springbootinit.service.impl;
 
+import static com.yupi.springbootinit.constant.RedisConstant.LOGIN_EXPIRED;
 import static com.yupi.springbootinit.constant.UserConstant.USER_LOGIN_STATE;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -19,13 +22,20 @@ import com.yupi.springbootinit.model.vo.UserVO;
 import com.yupi.springbootinit.service.UserService;
 import com.yupi.springbootinit.utils.SqlUtils;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -44,6 +54,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     private static final String SALT = "yupi";
 
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
+    /**
+     * 注册用户
+     * @param userAccount   用户账户
+     * @param userPassword  用户密码
+     * @param checkPassword 校验密码
+     * @return
+     */
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
         // 1. 校验
@@ -111,8 +132,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             log.info("user login failed, userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
-        // 3. 记录用户的登录态
-        request.getSession().setAttribute(USER_LOGIN_STATE, user);
+        // 3. 记录用户的登录态（采用session）
+        // 采用Redis 存入缓存
+//         request.getSession().setAttribute(USER_LOGIN_STATE, user);
+        Map<String,String> userMap = new HashMap<>();
+        userMap.put("account",user.getUserAccount());
+        userMap.put("password",user.getUserPassword());
+        userMap.put("userName",user.getUserName());
+        userMap.put("userRole",user.getUserRole());
+        stringRedisTemplate.opsForHash().putAll(USER_LOGIN_STATE,userMap);
+        // 更新登录状态的过期时间
+        stringRedisTemplate.expire(USER_LOGIN_STATE,LOGIN_EXPIRED, TimeUnit.MINUTES);
         return this.getLoginUserVO(user);
     }
 
@@ -150,25 +180,44 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     /**
      * 获取当前登录用户
-     *
      * @param request
      * @return
      */
     @Override
     public User getLoginUser(HttpServletRequest request) {
         // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User) userObj;
-        if (currentUser == null || currentUser.getId() == null) {
+        // 改成从Redis获取
+//         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        // 从Redis获取用户信息
+        Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(USER_LOGIN_STATE);
+        //  判断用户是否存在
+        if(userMap.isEmpty()){
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
-        // 从数据库查询（追求性能的话可以注释，直接走缓存）
-        long userId = currentUser.getId();
-        currentUser = this.getById(userId);
-        if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
-        }
-        return currentUser;
+//        if(userObj == null){
+//            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+//        }
+        // 存在
+//        User user = BeanUtil.fillBeanWithMap(userMap, new User(), false);
+         // 刷新在redis的缓存过期时间
+        User user = new User();
+        user.setUserAccount(userMap.get("account").toString());
+        user.setUserPassword(userMap.get("password").toString());
+        user.setUserName(userMap.get("userName").toString());
+        user.setUserRole(userMap.get("userRole").toString());
+        stringRedisTemplate.expire(USER_LOGIN_STATE,LOGIN_EXPIRED,TimeUnit.MINUTES);
+        return user;
+//        User currentUser = (User) userObj;
+//        if (currentUser == null || currentUser.getId() == null) {
+//            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+//        }
+//        // 从数据库查询（追求性能的话可以注释，直接走缓存）
+//        long userId = currentUser.getId();
+//        currentUser = this.getById(userId);
+//        if (currentUser == null) {
+//            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+//        }
+//        return currentUser;
     }
 
     /**

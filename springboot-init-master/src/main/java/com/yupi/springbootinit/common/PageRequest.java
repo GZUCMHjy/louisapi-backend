@@ -5,7 +5,6 @@ import lombok.Data;
 
 /**
  * 分页请求
- *
  * @author louis
  * 
  */
@@ -13,12 +12,12 @@ import lombok.Data;
 public class PageRequest {
 
     /**
-     * 当前页号
+     * 当前页号（默认第一页）
      */
     private long current = 1;
 
     /**
-     * 页面大小
+     * 页面大小（默认limit10条）
      */
     private long pageSize = 10;
 

@@ -44,6 +44,7 @@ public class AuthInterceptor {
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         // 当前登录用户
         User loginUser = userService.getLoginUser(request);
+        // todo 如果采用Redis存储，需要更新过期时间（每当要获取当前用户信息时）
         // 必须有该权限才通过
         if (StringUtils.isNotBlank(mustRole)) {
             UserRoleEnum mustUserRoleEnum = UserRoleEnum.getEnumByValue(mustRole);
