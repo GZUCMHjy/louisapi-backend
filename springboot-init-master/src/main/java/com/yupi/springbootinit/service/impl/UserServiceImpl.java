@@ -132,16 +132,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             log.info("user login failed, userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
-        // 3. 记录用户的登录态（采用session）
-        // 采用Redis 存入缓存
-//         request.getSession().setAttribute(USER_LOGIN_STATE, user);
+        // 3. 采用Redis 存入缓存
         Map<String,String> userMap = new HashMap<>();
+        userMap.put("id",user.getId().toString());
         userMap.put("account",user.getUserAccount());
-        userMap.put("password",user.getUserPassword());
         userMap.put("userName",user.getUserName());
         userMap.put("userRole",user.getUserRole());
+        userMap.put("accessKey",user.getAccessKey());
+        userMap.put("secretKey",user.getSecretKey());
+        userMap.put("userAvatar",user.getUserAvatar());
         stringRedisTemplate.opsForHash().putAll(USER_LOGIN_STATE,userMap);
-        // 更新登录状态的过期时间
+        // 4. 更新登录状态的过期时间
         stringRedisTemplate.expire(USER_LOGIN_STATE,LOGIN_EXPIRED, TimeUnit.MINUTES);
         return this.getLoginUserVO(user);
     }
@@ -186,38 +187,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public User getLoginUser(HttpServletRequest request) {
         // 先判断是否已登录
-        // 改成从Redis获取
-//         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
         // 从Redis获取用户信息
         Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(USER_LOGIN_STATE);
         //  判断用户是否存在
         if(userMap.isEmpty()){
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
-//        if(userObj == null){
-//            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
-//        }
-        // 存在
-//        User user = BeanUtil.fillBeanWithMap(userMap, new User(), false);
-         // 刷新在redis的缓存过期时间
         User user = new User();
-        user.setUserAccount(userMap.get("account").toString());
-        user.setUserPassword(userMap.get("password").toString());
-        user.setUserName(userMap.get("userName").toString());
-        user.setUserRole(userMap.get("userRole").toString());
+        // Map对象转指定对象
+        User beanUser = BeanUtil.fillBeanWithMap(userMap, user, false);
         stringRedisTemplate.expire(USER_LOGIN_STATE,LOGIN_EXPIRED,TimeUnit.MINUTES);
-        return user;
-//        User currentUser = (User) userObj;
-//        if (currentUser == null || currentUser.getId() == null) {
-//            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
-//        }
-//        // 从数据库查询（追求性能的话可以注释，直接走缓存）
-//        long userId = currentUser.getId();
-//        currentUser = this.getById(userId);
-//        if (currentUser == null) {
-//            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
-//        }
-//        return currentUser;
+        return beanUser;
     }
 
     /**
@@ -229,14 +209,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public User getLoginUserPermitNull(HttpServletRequest request) {
         // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User) userObj;
-        if (currentUser == null || currentUser.getId() == null) {
-            return null;
+        Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(USER_LOGIN_STATE);
+        User user = BeanUtil.fillBeanWithMap(userMap, new User(), false);
+        if(user == null || user.getId() == null){
+            return null ;
         }
-        // 从数据库查询（追求性能的话可以注释，直接走缓存）
-        long userId = currentUser.getId();
-        return this.getById(userId);
+        return user;
     }
 
     /**

@@ -2,10 +2,13 @@ package com.yupi.springbootinit.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.louis.louisapiclientsdk.client.LouisApiClient;
+import com.louis.louisapiclientsdk.common.BaseResult;
 import com.yuapi.common.model.entity.InterfaceInfo;
 import com.yuapi.common.model.entity.User;
+import com.yuapi.common.model.entity.UserInterfaceInfo;
 import com.yupi.springbootinit.annotation.AuthCheck;
 import com.yupi.springbootinit.common.*;
 import com.yupi.springbootinit.constant.CommonConstant;
@@ -17,10 +20,12 @@ import com.yupi.springbootinit.model.dto.interfaceinfo.InterfaceInfoQueryRequest
 import com.yupi.springbootinit.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
 import com.yupi.springbootinit.model.enums.InterfaceInfoStatusEnum;
 import com.yupi.springbootinit.service.InterfaceInfoService;
+import com.yupi.springbootinit.service.UserInterfaceInfoService;
 import com.yupi.springbootinit.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -45,11 +50,14 @@ public class InterfaceInfoController {
 
 
     @Resource
+    private UserInterfaceInfoService userInterfaceInfoService;
+    /**
+     * 接口客户端
+     */
+    @Resource
     private LouisApiClient louisApiClient;
 
     private final static Gson GSON = new Gson();
-
-    // region 增删改查
 
     /**
      * 创建
@@ -226,12 +234,11 @@ public class InterfaceInfoController {
     }
     @PostMapping("/invoke")
     public BaseResponse<Object> invokeInterfaceInfo(@RequestBody InterfaceInfoInvoke interfaceInfoInvoke,HttpServletRequest request){
-            if(interfaceInfoInvoke == null || interfaceInfoInvoke.getId() <= 0){
-                throw new BusinessException(ErrorCode.PARAMS_ERROR);
-            }
+        if(interfaceInfoInvoke == null || interfaceInfoInvoke.getId() <= 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
         Long id = interfaceInfoInvoke.getId();
-        // 获取前端用户输入的json格式的字符串
-        String userRequestParams = interfaceInfoInvoke.getUserRequestParams();
+
         // 判断是否存在
         InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
         if(oldInterfaceInfo == null){
@@ -241,21 +248,79 @@ public class InterfaceInfoController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"接口已关闭");
         }
         User loginUser = userService.getLoginUser(request);
+        Long userId = loginUser.getId();
+        // 添加用户接口信息
+        saveUserInterfaceInfo(userId,id);
+
         String accessKey = loginUser.getAccessKey();
         // 起初sk是空的（后端内部自己流通生成的）
         String secretKey = loginUser.getSecretKey();
-        // 用户自己的ak 和 sk
+        // 用户自己的ak 和 sk (在转发到网关项目接口携带ak、sk)
         LouisApiClient tempClient = new LouisApiClient(accessKey,secretKey);
         // json 和 gson
         Gson gson = new Gson();
         // 将前端传来的json格式的字符串转化为Java对象
         // 保证前端传来name和后端中对象的属性name要保持一致 否则解析赋值就会null
+        // 获取前端用户输入的json格式的字符串
+        String userRequestParams = interfaceInfoInvoke.getUserRequestParams();
         com.louis.louisapiclientsdk.model.User user = gson.fromJson(userRequestParams, com.louis.louisapiclientsdk.model.User.class);
         // todo 写死了（第三方接口）
         // 调用自己封装的sdk（专门存放接口的sdk）
         // 执行这一个调用sdk方法 跳转到网关（做两个项目interfaceInfo和backend的统一校验和业务逻辑处理）
-        String usernameByPost = tempClient.getUsernameByPost(user);
-        return ResultUtils.success(usernameByPost);
+//        String usernameByPost = tempClient.getUsernameByPost(user);
+        String res = "";
+        if(user == null){
+            res = tempClient.getBingOneDay7Pictures();
+        }
+        else{
+            res = tempClient.getUsernameByPost(user);
+        }
+        return ResultUtils.success(res);
+
+    }
+    @GetMapping("/getBingOneDay7Pictures")
+    public BaseResponse<Object> getBingOneDay7Pictures(@RequestBody InterfaceInfoInvoke interfaceInfoInvoke,HttpServletRequest request) throws Exception {
+        if(interfaceInfoInvoke.getId() == null || interfaceInfoInvoke.getId() <= 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        Long userId = loginUser.getId();
+        Long id = interfaceInfoInvoke.getId();
+        // 添加用户接口信息
+        saveUserInterfaceInfo(userId,id);
+        String accessKey = loginUser.getAccessKey();
+        // 起初sk是空的（后端内部自己流通生成的）
+        String secretKey = loginUser.getSecretKey();
+        // 用户自己的ak 和 sk (在转发到网关项目接口携带ak、sk)
+        LouisApiClient tempClient = new LouisApiClient(accessKey,secretKey);
+        // （1）通过sdk客户端项目将请求发送到网关项目
+        // （2）网关校验请求合法性（过滤）
+        // （3）结束后，调用接口项目接口 （接口项目返回的数据可以进行封装）
+        // （4）网关拿到接口项目返回的数据，将其字符串化
+        // （5）最后返回给backend
+        // （6）backend将json格式的字符串转换成Java对象
+        // （7）返回给前端
+        String jsonStr = tempClient.getBingOneDay7Pictures();
+        // json格式的字符串转换成Java对象
+        Gson gson = new Gson();
+        BaseResult baseResult = gson.fromJson(jsonStr, BaseResult.class);
+        return ResultUtils.success(jsonStr);
+    }
+    @Transactional
+    public void saveUserInterfaceInfo(Long userId,Long id){
+        QueryWrapper<UserInterfaceInfo> userInterfaceInfoQW = new QueryWrapper<>();
+        userInterfaceInfoQW.eq("userId",userId).eq("interfaceInfoId",id);
+        UserInterfaceInfo userInterfaceInfo = userInterfaceInfoService.getOne(userInterfaceInfoQW);
+        if(userInterfaceInfo == null){
+            UserInterfaceInfo addUserInterfaceInfo = new UserInterfaceInfo();
+            addUserInterfaceInfo.setUserId(userId);
+            // 初始化调用剩余次数为10
+            // 调用总次数为0
+            addUserInterfaceInfo.setTotalNum(0);
+            addUserInterfaceInfo.setLeftNum(10);
+            addUserInterfaceInfo.setInterfaceInfoId(id);
+            userInterfaceInfoService.save(addUserInterfaceInfo);
+        }
     }
 
     /**
