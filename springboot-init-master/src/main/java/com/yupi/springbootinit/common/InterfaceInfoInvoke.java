@@ -11,7 +11,13 @@ import java.io.Serializable;
  */
 @Data
 public class InterfaceInfoInvoke implements Serializable {
+    /**
+     * 接口id
+     */
     private Long id;
+    /**
+     * 接口参数
+     */
     private String userRequestParams;
     private static final long  serialVersionUID = 1L;
 }

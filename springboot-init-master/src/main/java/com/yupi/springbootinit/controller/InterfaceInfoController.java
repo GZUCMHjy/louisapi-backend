@@ -2,7 +2,8 @@ package com.yupi.springbootinit.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.louis.louisapiclientsdk.client.LouisApiClient;
 import com.louis.louisapiclientsdk.common.BaseResult;
@@ -27,9 +28,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -262,23 +265,56 @@ public class InterfaceInfoController {
         // 将前端传来的json格式的字符串转化为Java对象
         // 保证前端传来name和后端中对象的属性name要保持一致 否则解析赋值就会null
         // 获取前端用户输入的json格式的字符串
-        String userRequestParams = interfaceInfoInvoke.getUserRequestParams();
-        com.louis.louisapiclientsdk.model.User user = gson.fromJson(userRequestParams, com.louis.louisapiclientsdk.model.User.class);
-        // todo 写死了（第三方接口）
+        String requestParams = interfaceInfoInvoke.getUserRequestParams();
+        InterfaceInfo targetInterfaceInfo = interfaceInfoService.getById(id);
+        // 判断是否需要传参(todo 详细校验传参类型)
+        if(targetInterfaceInfo.getRequestParams().isEmpty() && requestParams != null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        String methodName = targetInterfaceInfo.getName();
+        com.louis.louisapiclientsdk.model.User user = gson.fromJson(requestParams, com.louis.louisapiclientsdk.model.User.class);
         // 调用自己封装的sdk（专门存放接口的sdk）
         // 执行这一个调用sdk方法 跳转到网关（做两个项目interfaceInfo和backend的统一校验和业务逻辑处理）
-//        String usernameByPost = tempClient.getUsernameByPost(user);
         String res = "";
         if(user == null){
-            res = tempClient.getBingOneDay7Pictures();
+            // 无传参类型接口
+            if(methodName.contains("getBingOneDay7Pictures")){
+                res = tempClient.getBingOneDay7Pictures();
+                ObjectMapper objectMapper = new ObjectMapper();
+                try{
+                    JsonNode jsonNode = objectMapper.readTree(res);
+                    // 现在，您可以使用jsonNode对象访问JSON的各个部分
+                    // 例如，获取result数组
+                    JsonNode resultNode = jsonNode.get("result");
+                    List<ImageResult> resultList = objectMapper.convertValue(resultNode, new TypeReference<List<ImageResult>>() {});
+                    return ResultUtils.success(resultList);
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+            }
+            // ...多个无参接口
+            // if(method.contains("getXXX1")){
+            //     res = tempClient.getXXX1();
+            // }
+            // if(method.contains("getXXX2")){
+            //     res = tempClient.getXXX2();
+            // }
+            // if(method.contains("getXXX3")){
+            //     res = tempClient.getXXX3();
+            // }
+
         }
         else{
+            // 有传参类型接口(todo 如何判断有参的不同接口呢？？？)
             res = tempClient.getUsernameByPost(user);
         }
+
+        // todo 不能只是返回字符串数据（显得data很冗长，不美观）
         return ResultUtils.success(res);
 
     }
     @GetMapping("/getBingOneDay7Pictures")
+    @Deprecated
     public BaseResponse<Object> getBingOneDay7Pictures(@RequestBody InterfaceInfoInvoke interfaceInfoInvoke,HttpServletRequest request) throws Exception {
         if(interfaceInfoInvoke.getId() == null || interfaceInfoInvoke.getId() <= 0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
