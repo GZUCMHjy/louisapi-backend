@@ -277,7 +277,7 @@ public class InterfaceInfoController {
         // 执行这一个调用sdk方法 跳转到网关（做两个项目interfaceInfo和backend的统一校验和业务逻辑处理）
         String res = "";
         if(user == null){
-            // 无传参类型接口
+            // 无传参类型接口1——Bing7Pictures
             if(methodName.contains("getBingOneDay7Pictures")){
                 res = tempClient.getBingOneDay7Pictures();
                 ObjectMapper objectMapper = new ObjectMapper();
