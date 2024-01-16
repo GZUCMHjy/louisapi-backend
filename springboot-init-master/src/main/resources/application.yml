@@ -38,10 +38,10 @@ spring:
         time-between-eviction-runs: 10s
   # Elasticsearch 配置
   # todo 需替换配置，然后取消注释
-#  elasticsearch:
-#    uris: http://localhost:9200
-#    username: root
-#    password: 123456
+  elasticsearch:
+    uris: http://localhost:9200
+    username: elastic
+    password: changeme
   # 文件上传
   servlet:
     multipart:

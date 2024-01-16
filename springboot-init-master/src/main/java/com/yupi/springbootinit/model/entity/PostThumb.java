@@ -11,10 +11,10 @@ import lombok.Data;
 /**
  * 帖子点赞
  *
- * @author louis
- * 
+ * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
+ * @from <a href="https://yupi.icu">编程导航知识星球</a>
  */
-@TableName(value = "interfaceInfo_thumb")
+@TableName(value = "post_thumb")
 @Data
 public class PostThumb implements Serializable {
 
@@ -27,7 +27,7 @@ public class PostThumb implements Serializable {
     /**
      * 帖子 id
      */
-    private Long interfaceInfoId;
+    private Long postId;
 
     /**
      * 创建用户 id
