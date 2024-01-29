@@ -292,7 +292,7 @@ public class InterfaceInfoController {
                     e.printStackTrace();
                 }
             }
-            // ...多个无参接口
+            // todo ...多个无参接口
             // if(method.contains("getXXX1")){
             //     res = tempClient.getXXX1();
             // }
