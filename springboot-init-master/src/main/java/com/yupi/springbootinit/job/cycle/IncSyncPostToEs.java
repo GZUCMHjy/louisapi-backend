@@ -1,9 +1,8 @@
 //package com.yupi.springbootinit.job.cycle;
-//
-//import com.yupi.springbootinit.esdao.interfaceInfoEsDao;
-//import com.yupi.springbootinit.mapper.interfaceInfoMapper;
-//import com.yupi.springbootinit.model.dto.interfaceInfo.interfaceInfoEsDTO;
-//import com.yupi.springbootinit.model.entity.interfaceInfo;
+//import com.yupi.springbootinit.esdao.PostEsDao;
+//import com.yupi.springbootinit.mapper.PostMapper;
+//import com.yupi.springbootinit.model.dto.post.PostEsDTO;
+//import com.yupi.springbootinit.model.entity.Post;
 //import java.util.Date;
 //import java.util.List;
 //import java.util.stream.Collectors;
@@ -11,23 +10,24 @@
 //import lombok.extern.slf4j.Slf4j;
 //import org.apache.commons.collections4.CollectionUtils;
 //import org.springframework.scheduling.annotation.Scheduled;
+//import org.springframework.stereotype.Component;
 //
 ///**
 // * 增量同步帖子到 es
 // *
 // * @author louis
-// * 
+// *
 // */
 //// todo 取消注释开启任务
-////@Component
+//@Component
 //@Slf4j
-//public class IncSyncinterfaceInfoToEs {
+//public class IncSyncPostToEs {
 //
 //    @Resource
-//    private interfaceInfoMapper interfaceInfoMapper;
+//    private PostMapper postMapper;
 //
 //    @Resource
-//    private interfaceInfoEsDao interfaceInfoEsDao;
+//    private PostEsDao postEsDao;
 //
 //    /**
 //     * 每分钟执行一次
@@ -36,13 +36,13 @@
 //    public void run() {
 //        // 查询近 5 分钟内的数据
 //        Date fiveMinutesAgoDate = new Date(new Date().getTime() - 5 * 60 * 1000L);
-//        List<interfaceInfo> interfaceInfoList = interfaceInfoMapper.listinterfaceInfoWithDelete(fiveMinutesAgoDate);
+//        List<Post> interfaceInfoList = postMapper.listPostWithDelete(fiveMinutesAgoDate);
 //        if (CollectionUtils.isEmpty(interfaceInfoList)) {
-//            log.info("no inc interfaceInfo");
+//            log.info("no inc post");
 //            return;
 //        }
-//        List<interfaceInfoEsDTO> interfaceInfoEsDTOList = interfaceInfoList.stream()
-//                .map(interfaceInfoEsDTO::objToDto)
+//        List<PostEsDTO> interfaceInfoEsDTOList = interfaceInfoList.stream()
+//                .map(PostEsDTO::objToDto)
 //                .collect(Collectors.toList());
 //        final int pageSize = 500;
 //        int total = interfaceInfoEsDTOList.size();
@@ -50,8 +50,10 @@
 //        for (int i = 0; i < total; i += pageSize) {
 //            int end = Math.min(i + pageSize, total);
 //            log.info("sync from {} to {}", i, end);
-//            interfaceInfoEsDao.saveAll(interfaceInfoEsDTOList.subList(i, end));
+//            postEsDao.saveAll(interfaceInfoEsDTOList.subList(i, end));
 //        }
 //        log.info("IncSyncinterfaceInfoToEs end, total {}", total);
+//
+//
 //    }
 //}

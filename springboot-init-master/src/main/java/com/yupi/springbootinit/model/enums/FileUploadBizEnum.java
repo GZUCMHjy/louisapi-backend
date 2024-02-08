@@ -7,7 +7,7 @@ import org.apache.commons.lang3.ObjectUtils;
 
 /**
  * 文件上传业务类型枚举
- *
+ * 用于文件上传时业务分类
  * @author louis
  * 
  */

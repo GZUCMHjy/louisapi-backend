@@ -4,9 +4,9 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.yuapi.common.model.entity.Post;
 import com.yuapi.common.model.entity.User;
 import com.yupi.springbootinit.model.entity.Picture;
-import com.yupi.springbootinit.model.entity.Post;
 import com.yupi.springbootinit.service.PostService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -94,7 +94,7 @@ public class CrawlerTest {
         }
         System.out.println(postList);
         // 批量插入（性能比循环插入要好）
-        for (Post post : postList) {
+        for (com.yupi.springbootinit.model.entity.Post post : postList) {
             postService.save(post);
         }
         //postService.saveBatch(postList);

@@ -9,6 +9,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yuapi.common.model.entity.User;
 import com.yupi.springbootinit.common.ErrorCode;
@@ -277,6 +278,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return new ArrayList<>();
         }
         return userList.stream().map(this::getUserVO).collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<com.yuapi.common.model.vo.UserVO> listUserVOPage(UserQueryRequest userQueryRequest) {
+        long current = userQueryRequest.getCurrent();
+        long pageSize = userQueryRequest.getPageSize();
+        // 查实体表 获取records
+        Page<User> userPage = this.page(new Page<>(current, pageSize),
+                this.getQueryWrapper(userQueryRequest));
+        List<User> records = userPage.getRecords();
+        List<com.yuapi.common.model.vo.UserVO> userVOS = new ArrayList<>(records.size());
+        for (User record : records) {
+            com.yuapi.common.model.vo.UserVO userVO = new com.yuapi.common.model.vo.UserVO();
+            userVO.setUserAvatar(record.getUserAvatar());
+            userVO.setUserName(record.getUserName());
+            userVO.setUserProfile(record.getUserProfile());
+            userVO.setUserRole(record.getUserRole());
+            userVO.setId(record.getId());
+            userVOS.add(userVO);
+        }
+        Page<com.yuapi.common.model.vo.UserVO> userNewVOPage = new Page<>();
+        userNewVOPage.setRecords(userVOS);
+        return userNewVOPage;
     }
 
     @Override

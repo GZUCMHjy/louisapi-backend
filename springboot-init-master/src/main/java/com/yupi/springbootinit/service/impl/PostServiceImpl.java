@@ -65,6 +65,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Resource
     private PostFavourMapper postFavourMapper;
 
+    // 更加完备（灵活）的api方法
     @Resource
     private ElasticsearchRestTemplate elasticsearchRestTemplate;
 
@@ -165,6 +166,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         }
         // 包含任何一个标签即可
         if (CollectionUtils.isNotEmpty(orTagList)) {
+            // 构建bool类型查询
             BoolQueryBuilder orTagBoolQueryBuilder = QueryBuilders.boolQuery();
             for (String tag : orTagList) {
                 orTagBoolQueryBuilder.should(QueryBuilders.termQuery("tags", tag));
@@ -174,6 +176,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         }
         // 按关键词检索
         if (StringUtils.isNotBlank(searchText)) {
+            // shoule 只要符合其中任意一个字段
             boolQueryBuilder.should(QueryBuilders.matchQuery("title", searchText));
             boolQueryBuilder.should(QueryBuilders.matchQuery("description", searchText));
             boolQueryBuilder.should(QueryBuilders.matchQuery("content", searchText));

@@ -1,6 +1,7 @@
 package com.yupi.springbootinit.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yuapi.common.model.entity.User;
 import com.yupi.springbootinit.model.dto.user.UserQueryRequest;
@@ -109,6 +110,8 @@ public interface UserService extends IService<User> {
      * @return
      */
     List<UserVO> getUserVO(List<User> userList);
+
+    Page<com.yuapi.common.model.vo.UserVO> listUserVOPage(UserQueryRequest userQueryRequest);
 
     /**
      * 获取查询条件

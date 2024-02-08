@@ -12,7 +12,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.boot.CommandLineRunner;
 
 /**
- * 全量同步帖子到 es
+ * 全量同步帖子到 es（首次）
  *
  * @author louis
  *

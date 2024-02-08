@@ -19,4 +19,7 @@ public class SearchRequest extends PageRequest implements Serializable {
      * 搜索词
      */
     private String searchText;
+
+
+    private String type;
 }

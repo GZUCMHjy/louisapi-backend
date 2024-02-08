@@ -33,6 +33,12 @@ public class PictureController {
     private PictureService pictureService;
 
 
+    /**
+     * 第三方接口（bing）搜索图片
+     * @param pictureQueryRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<Picture>> listPictureByPage(@RequestBody PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
         long current = pictureQueryRequest.getCurrent();
